@@ -28,7 +28,7 @@ public final class DriverFrequencyOwner extends DriverSidedTileEntity {
             super(tileEntity, "ender_storage");
         }
 
-        @Callback(doc = "function():number -- Get the currently set frequency.")
+        @Callback(doc = "function():table -- Get the currently set frequency. {left, middle, right}")
         public Object[] getFrequency(final Context context, final Arguments args) {
             return new Object[]{tileEntity.frequency.toArray()};
         }
@@ -68,7 +68,7 @@ public final class DriverFrequencyOwner extends DriverSidedTileEntity {
             return new Object[]{tileEntity.frequency.owner};
         }
 
-        @Callback(doc = "function():string,string,string -- Get the frequency as color names (minecraft names).")
+        @Callback(doc = "function():table -- Get the currently set frequency as a table of color names.")
         public Object[] getFrequencyColors(final Context context, final Arguments args){
             return new Object[]{ tileEntity.frequency.getColours() };
         }
