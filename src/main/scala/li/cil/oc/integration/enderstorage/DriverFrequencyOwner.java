@@ -39,16 +39,19 @@ public final class DriverFrequencyOwner extends DriverSidedTileEntity {
             final int middle;
             final int right;
             if (args.count() == 1){
-            	 left = (args.checkInteger(0) >> 8) & 0xF;
-            	 middle = (args.checkInteger(0) >> 4) & 0xF;
-            	 right = args.checkInteger(0) & 0xF;
+                if ((args.checkInteger(0) & 0xFFF) != args.checkInteger(0)) {
+                    throw new IllegalArgumentException("invalid frequency");
+                }
+                left = (args.checkInteger(0) >> 8) & 0xF;
+                middle = (args.checkInteger(0) >> 4) & 0xF;
+                right = args.checkInteger(0) & 0xF;
             } else {
-            	left = args.checkInteger(0);
-            	middle = args.checkInteger(1);
-            	right = args.checkInteger(2);
-            }
-            if ((left & 0xF) != left || (middle & 0xF) != middle || (right & 0xF) != right) {
-                throw new IllegalArgumentException("invalid frequency");
+                left = args.checkInteger(0);
+                middle = args.checkInteger(1);
+                right = args.checkInteger(2);
+                if ((left & 0xF) != left || (middle & 0xF) != middle || (right & 0xF) != right) {
+                    throw new IllegalArgumentException("invalid frequency");
+                }
             }
             final String owner = tileEntity.frequency.owner;
             if (owner == null || owner.isEmpty() || "global".equals(owner)) {
