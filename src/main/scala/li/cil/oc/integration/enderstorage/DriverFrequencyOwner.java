@@ -33,7 +33,7 @@ public final class DriverFrequencyOwner extends DriverSidedTileEntity {
             return new Object[]{tileEntity.frequency.toArray()};
         }
 
-        @Callback(doc = "function(left:number, middle:number, right:number) -- Set the frequency. Who would have thought?!")
+        @Callback(doc = "function(left:number, middle:number, right:number) -- Set the frequency. Range 0-15 (inclusive).")
         public Object[] setFrequency(final Context context, final Arguments args) {
             final int left;
             final int middle;
