@@ -66,7 +66,7 @@ public final class DriverFrequencyOwner extends DriverSidedTileEntity {
 
         @Callback(doc = "function():string,string,string -- Get the frequency as color names (minecraft names).")
         public Object[] getFrequencyColors(final Context context, final Arguments args){
-            return tileEntity.frequency.getColours();
+            return new Object[]{ tileEntity.frequency.getColours() };
         }
     }
 }
