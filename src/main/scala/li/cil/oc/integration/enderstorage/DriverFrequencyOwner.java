@@ -1,6 +1,7 @@
 package li.cil.oc.integration.enderstorage;
 
-import codechicken.enderstorage.common.TileFrequencyOwner;
+import codechicken.enderstorage.tile.TileFrequencyOwner;
+import codechicken.enderstorage.api.Frequency;
 import li.cil.oc.api.machine.Arguments;
 import li.cil.oc.api.machine.Callback;
 import li.cil.oc.api.machine.Context;
@@ -8,7 +9,8 @@ import li.cil.oc.api.network.ManagedEnvironment;
 import li.cil.oc.api.prefab.DriverSidedTileEntity;
 import li.cil.oc.integration.ManagedTileEntityEnvironment;
 import net.minecraft.world.World;
-import net.minecraftforge.common.util.ForgeDirection;
+import net.minecraft.util.EnumFacing;
+import net.minecraft.util.math.BlockPos;
 
 public final class DriverFrequencyOwner extends DriverSidedTileEntity {
     @Override
@@ -17,8 +19,8 @@ public final class DriverFrequencyOwner extends DriverSidedTileEntity {
     }
 
     @Override
-    public ManagedEnvironment createEnvironment(final World world, final int x, final int y, final int z, final ForgeDirection side) {
-        return new Environment((TileFrequencyOwner) world.getTileEntity(x, y, z));
+    public ManagedEnvironment createEnvironment(final World world, final BlockPos pos, final EnumFacing side) {
+        return new Environment((TileFrequencyOwner) world.getTileEntity(pos));
     }
 
     public static final class Environment extends ManagedTileEntityEnvironment<TileFrequencyOwner> {
@@ -28,18 +30,20 @@ public final class DriverFrequencyOwner extends DriverSidedTileEntity {
 
         @Callback(doc = "function():number -- Get the currently set frequency.")
         public Object[] getFrequency(final Context context, final Arguments args) {
-            return new Object[]{tileEntity.freq};
+            return new Object[]{tileEntity.frequency.toArray()};
         }
 
-        @Callback(doc = "function(value:number) -- Set the frequency. Who would have thought?!")
+        @Callback(doc = "function(left:number, middle:number, right:number) -- Set the frequency. Who would have thought?!")
         public Object[] setFrequency(final Context context, final Arguments args) {
-            final int frequency = args.checkInteger(0);
-            if ((frequency & 0xFFF) != frequency) {
+            final int left = args.checkInteger(0);
+            final int middle = args.checkInteger(1);
+            final int right = args.checkInteger(2);
+            if ((left & 0xF) != left || (middle & 0xF) != middle || (right & 0xF) != right) {
                 throw new IllegalArgumentException("invalid frequency");
             }
-            final String owner = tileEntity.owner;
+            final String owner = tileEntity.frequency.owner;
             if (owner == null || owner.isEmpty() || "global".equals(owner)) {
-                tileEntity.setFreq(frequency);
+                tileEntity.setFreq(new Frequency(left,middle,right));
             } else {
                 return new Object[]{null, "cannot change frequency of owned storage"};
             }
@@ -48,7 +52,7 @@ public final class DriverFrequencyOwner extends DriverSidedTileEntity {
 
         @Callback(doc = "function():string -- Get the name of the owner, which is usually a player's name or 'global'.")
         public Object[] getOwner(final Context context, final Arguments args) {
-            return new Object[]{tileEntity.owner};
+            return new Object[]{tileEntity.frequency.owner};
         }
     }
 }
