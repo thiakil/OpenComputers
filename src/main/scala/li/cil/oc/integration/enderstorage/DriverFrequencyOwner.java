@@ -35,9 +35,18 @@ public final class DriverFrequencyOwner extends DriverSidedTileEntity {
 
         @Callback(doc = "function(left:number, middle:number, right:number) -- Set the frequency. Who would have thought?!")
         public Object[] setFrequency(final Context context, final Arguments args) {
-            final int left = args.checkInteger(0);
-            final int middle = args.checkInteger(1);
-            final int right = args.checkInteger(2);
+            final int left;
+            final int middle;
+            final int right;
+            if (args.count() == 1){
+            	 left = (args.checkInteger(0) >> 8) & 0xF;
+            	 middle = (args.checkInteger(0) >> 4) & 0xF;
+            	 right = args.checkInteger(0) & 0xF;
+            } else {
+            	left = args.checkInteger(0);
+            	middle = args.checkInteger(1);
+            	right = args.checkInteger(2);
+            }
             if ((left & 0xF) != left || (middle & 0xF) != middle || (right & 0xF) != right) {
                 throw new IllegalArgumentException("invalid frequency");
             }
