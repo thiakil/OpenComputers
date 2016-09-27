@@ -39,12 +39,13 @@ public final class DriverFrequencyOwner extends DriverSidedTileEntity {
             final int middle;
             final int right;
             if (args.count() == 1){
-                if ((args.checkInteger(0) & 0xFFF) != args.checkInteger(0)) {
+                final int freq = args.checkInteger(0);
+                if ((freq & 0xFFF) != freq) {
                     throw new IllegalArgumentException("invalid frequency");
                 }
-                left = (args.checkInteger(0) >> 8) & 0xF;
-                middle = (args.checkInteger(0) >> 4) & 0xF;
-                right = args.checkInteger(0) & 0xF;
+                left = (freq >> 8) & 0xF;
+                middle = (freq >> 4) & 0xF;
+                right = freq & 0xF;
             } else {
                 left = args.checkInteger(0);
                 middle = args.checkInteger(1);
