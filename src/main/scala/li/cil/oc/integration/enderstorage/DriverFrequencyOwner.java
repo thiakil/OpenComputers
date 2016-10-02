@@ -1,7 +1,9 @@
 package li.cil.oc.integration.enderstorage;
 
 import codechicken.enderstorage.tile.TileFrequencyOwner;
+import codechicken.enderstorage.tile.TileEnderTank;
 import codechicken.enderstorage.api.Frequency;
+import li.cil.oc.api.driver.NamedBlock;
 import li.cil.oc.api.machine.Arguments;
 import li.cil.oc.api.machine.Callback;
 import li.cil.oc.api.machine.Context;
@@ -23,9 +25,19 @@ public final class DriverFrequencyOwner extends DriverSidedTileEntity {
         return new Environment((TileFrequencyOwner) world.getTileEntity(pos));
     }
 
-    public static final class Environment extends ManagedTileEntityEnvironment<TileFrequencyOwner> {
+    public static final class Environment extends ManagedTileEntityEnvironment<TileFrequencyOwner> implements NamedBlock {
         public Environment(final TileFrequencyOwner tileEntity) {
-            super(tileEntity, "ender_storage");
+            super(tileEntity, tileEntity instanceof TileEnderTank ? "ender_tank" : "ender_chest");
+        }
+
+        @Override
+        public String preferredName() {
+            return tileEntity instanceof TileEnderTank ? "ender_tank" : "ender_chest";
+        }
+
+        @Override
+        public int priority() {
+            return 0;
         }
 
         @Callback(doc = "function():table -- Get the currently set frequency. {left, middle, right}")
