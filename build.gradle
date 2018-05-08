@@ -103,7 +103,7 @@ dependencies {
 	}
 	provided name: 'ExtraCells', version: config.extracells.version, ext: 'jar'
 	
-	provided (name: 'Mekanism', version: config.mekanism.version, classifier: 'api') {
+	provided (group: "mekanism", name: 'Mekanism', version: config.mekanism.version, classifier: 'api') {
 		transitive = false
 	}
 
