@@ -13,14 +13,15 @@ import net.minecraft.world.IBlockAccess
 import net.minecraft.world.World
 import net.minecraftforge.common.property.ExtendedBlockState
 import net.minecraftforge.common.property.IExtendedBlockState
+import net.minecraftforge.common.property.IUnlistedProperty
 
 class NetSplitter extends RedstoneAware {
-  override def createBlockState() = new ExtendedBlockState(this, Array.empty, Array(PropertyTile.Tile))
+  override def createBlockState() = new ExtendedBlockState(this, Array.empty, Array(NetSplitter.OpenSides))
 
   override def getExtendedState(state: IBlockState, world: IBlockAccess, pos: BlockPos): IBlockState =
     (state, world.getTileEntity(pos)) match {
       case (extendedState: IExtendedBlockState, t: tileentity.NetSplitter) =>
-        extendedState.withProperty(property.PropertyTile.Tile, t)
+        extendedState.withProperty(NetSplitter.OpenSides, EnumFacing.values().map(t.isSideOpen))
       case _ => state
     }
 
@@ -49,5 +50,17 @@ class NetSplitter extends RedstoneAware {
       }
     }
     else super.onBlockActivated(world, pos, state, player, hand, side, hitX, hitY, hitZ)
+  }
+}
+
+object NetSplitter {
+  object OpenSides extends IUnlistedProperty[Array[Boolean]]{
+    override def getName: String = "open_sides"
+
+    override def isValid(value: Array[Boolean]): Boolean = value != null && value.length == EnumFacing.values().length
+
+    override def getType: Class[Array[Boolean]] = classOf[Array[Boolean]]
+
+    override def valueToString(value: Array[Boolean]): String = value.toString
   }
 }

@@ -29,12 +29,12 @@ object NetSplitterModel extends SmartBlockModelBase {
   override def getQuads(state: IBlockState, side: EnumFacing, rand: Long): util.List[BakedQuad] =
     state match {
       case extended: IExtendedBlockState =>
-        extended.getValue(block.property.PropertyTile.Tile) match {
-          case t: tileentity.NetSplitter =>
+        extended.getValue(block.NetSplitter.OpenSides) match {
+          case openSides: Array[Boolean] =>
             val faces = mutable.ArrayBuffer.empty[BakedQuad]
 
             faces ++= BaseModel
-            addSideQuads(faces, EnumFacing.values().map(t.isSideOpen))
+            addSideQuads(faces, openSides)
 
             bufferAsJavaList(faces)
           case _ => super.getQuads(state, side, rand)
