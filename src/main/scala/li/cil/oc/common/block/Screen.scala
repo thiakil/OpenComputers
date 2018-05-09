@@ -16,22 +16,23 @@ import _root_.net.minecraft.world.IBlockAccess
 import _root_.net.minecraft.world.World
 import _root_.net.minecraftforge.common.property.ExtendedBlockState
 import _root_.net.minecraftforge.common.property.IExtendedBlockState
+import _root_.net.minecraftforge.common.property.IUnlistedProperty
 import li.cil.oc.Constants
 import li.cil.oc.OpenComputers
 import li.cil.oc.Settings
 import li.cil.oc.api
 import li.cil.oc.common.GuiType
 import li.cil.oc.common.block.property.PropertyRotatable
-import li.cil.oc.common.block.property.PropertyTile
 import li.cil.oc.common.tileentity
 import li.cil.oc.integration.util.Wrench
 import li.cil.oc.util.PackedColor
 import li.cil.oc.util.Rarity
+import li.cil.oc.util.RotationHelper
 import li.cil.oc.util.Tooltip
 import net.minecraft.client.util.ITooltipFlag
 
 class Screen(val tier: Int) extends RedstoneAware {
-  override def createBlockState() = new ExtendedBlockState(this, Array(PropertyRotatable.Pitch, PropertyRotatable.Yaw), Array(PropertyTile.Tile))
+  override def createBlockState() = new ExtendedBlockState(this, Array(PropertyRotatable.Pitch, PropertyRotatable.Yaw), Array(ScreenInfoProp))
 
   override def getMetaFromState(state: IBlockState): Int = (state.getValue(PropertyRotatable.Pitch).ordinal() << 2) | state.getValue(PropertyRotatable.Yaw).getHorizontalIndex
 
@@ -41,7 +42,7 @@ class Screen(val tier: Int) extends RedstoneAware {
     (state, world.getTileEntity(pos)) match {
       case (extendedState: IExtendedBlockState, tile: tileentity.Screen) =>
         extendedState.
-          withProperty(property.PropertyTile.Tile, tile).
+          withProperty(ScreenInfoProp, new ScreenInfo(tile)).
           withProperty(PropertyRotatable.Pitch, tile.pitch).
           withProperty(PropertyRotatable.Yaw, tile.yaw)
       case _ => state
@@ -141,4 +142,32 @@ class Screen(val tier: Int) extends RedstoneAware {
         }
       case _ => super.getValidRotations(world, pos)
     }
+}
+
+object ScreenInfoProp extends IUnlistedProperty[ScreenInfo]{
+  override def getName: String = "screen_info"
+
+  override def isValid(value: ScreenInfo): Boolean = value != null
+
+  override def getType: Class[ScreenInfo] = classOf[ScreenInfo]
+
+  override def valueToString(value: ScreenInfo): String = value.toString
+}
+
+class ScreenInfo(screen: tileentity.Screen) {
+  val localPosition: (Int, Int) = screen.localPosition
+  val width: Int = screen.width
+  val height: Int = screen.height
+  val pitch: EnumFacing = screen.pitch
+  val yaw: EnumFacing = screen.yaw
+  val facing: EnumFacing = screen.facing
+  val color: Int = screen.getColor
+
+  def toLocal(value: EnumFacing): EnumFacing = if (value == null) null else {
+    val p = pitch
+    val y = yaw
+    if (p != null && y != null) RotationHelper.toLocal(pitch, yaw, value) else null
+  }
+
+  override def toString: String = s"ScreenInfo {localPosition = $localPosition, width = $width, height = $height, pitch = $pitch, yaw = $yaw, facing = $facing}"
 }

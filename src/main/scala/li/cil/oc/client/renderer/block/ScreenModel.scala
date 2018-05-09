@@ -29,8 +29,8 @@ object ScreenModel extends SmartBlockModelBase {
     val safeSide = if (side != null) side else EnumFacing.SOUTH
     state match {
       case extended: IExtendedBlockState =>
-        extended.getValue(block.property.PropertyTile.Tile) match {
-          case screen: tileentity.Screen =>
+        extended.getValue(block.ScreenInfoProp) match {
+          case screen: block.ScreenInfo =>
             val facing = screen.toLocal(safeSide)
 
             val (x, y) = screen.localPosition
@@ -72,7 +72,7 @@ object ScreenModel extends SmartBlockModelBase {
                   Textures.Block.Screen.Multi(pitch)(py)(px)(facing.getIndex)
               }
 
-            seqAsJavaList(Seq(bakeQuad(safeSide, Textures.getSprite(texture), Some(screen.getColor), rotation)))
+            seqAsJavaList(Seq(bakeQuad(safeSide, Textures.getSprite(texture), Some(screen.color), rotation)))
           case _ => super.getQuads(state, safeSide, rand)
         }
       case _ => super.getQuads(state, safeSide, rand)
