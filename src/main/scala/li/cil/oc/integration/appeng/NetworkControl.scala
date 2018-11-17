@@ -172,7 +172,7 @@ trait NetworkControl[AETile >: Null <: TileEntity with IActionHost with IGridHos
     val count = args.optInteger(3, Int.MaxValue) min (database.size - offset) min items.length
     var slot = offset
     for (i <- 0 until count) {
-      val stack = Option(items(i)).map(_.createItemStack.copy()).orNull
+      val stack = Option(items(i)).map(_.createItemStack).orNull
       while (!database.getStackInSlot(slot).isEmpty && slot < database.size) slot += 1
       if (database.getStackInSlot(slot).isEmpty) {
         database.setStackInSlot(slot, stack)
