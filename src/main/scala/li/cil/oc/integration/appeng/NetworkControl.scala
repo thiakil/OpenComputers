@@ -43,19 +43,11 @@ trait NetworkControl[AETile >: Null <: TileEntity with IActionHost with IGridHos
 
   def node: Node
 
-  private def aeCraftItem(aeItem: IAEItemStack): IAEItemStack = {
-    val patterns = AEUtil.getGridCrafting(tile.getGridNode(pos).getGrid).getCraftingFor(aeItem, null, 0, tile.getWorld)
-    patterns.find(pattern => pattern.getOutputs.exists(_.isSameType(aeItem))) match {
-      case Some(pattern) => pattern.getOutputs.find(_.isSameType(aeItem)).get
-      case _ => aeItem.copy.setStackSize(0) // Should not be possible, but hey...
-    }
-  }
-
   private def aePotentialItem(aeItem: IAEItemStack): IAEItemStack = {
     if (aeItem.getStackSize > 0 || !aeItem.isCraftable)
       aeItem
     else
-      aeCraftItem(aeItem)
+      aeItem.copy().setStackSize(1)
   }
 
   private def isSequentialTable(map: scala.collection.mutable.HashMap[_, _]): Boolean = {
@@ -113,7 +105,7 @@ trait NetworkControl[AETile >: Null <: TileEntity with IActionHost with IGridHos
   }
 
   private def allItems: Iterable[IAEItemStack] = AEUtil.getGridStorage(tile.getGridNode(pos).getGrid).getInventory(AEUtil.itemStorageChannel).getStorageList
-  private def allCraftables: Iterable[IAEItemStack] = allItems.collect{ case aeItem if aeItem.isCraftable => aeCraftItem(aeItem) }
+  private def allCraftables: Iterable[IAEItemStack] = allItems.filter(_.isCraftable)
 
   private def convert(aeItem: IAEItemStack): java.util.Map[AnyRef, AnyRef] = {
     // I would prefer to move the convert code to the registry for IAEItemStack
@@ -246,6 +238,11 @@ object NetworkControl {
 
     private val links = mutable.Set.empty[ICraftingLink]
 
+    if (stack != null && stack.getStackSize < 1){
+      stack = stack.copy()
+      stack.setStackSize(1)
+    }
+
     // ----------------------------------------------------------------------- //
 
     override def getRequestedJobs = ImmutableSet.copyOf(links.toIterable)
@@ -271,7 +268,7 @@ object NetworkControl {
     // ----------------------------------------------------------------------- //
 
     @Callback(doc = "function():table -- Returns the item stack representation of the crafting result.")
-    def getItemStack(context: Context, args: Arguments): Array[AnyRef] = Array(stack.createItemStack())
+    def getItemStack(context: Context, args: Arguments): Array[AnyRef] = Array(aeCraftItem(stack).createItemStack())
 
     @Callback(doc = "function([amount:int[, prioritizePower:boolean[, cpuName:string]]]):userdata -- Requests the item to be crafted, returning an object that allows tracking the crafting status.")
     def request(context: Context, args: Arguments): Array[AnyRef] = {
@@ -355,6 +352,14 @@ object NetworkControl {
         link.writeToNBT(comp)
         comp
       }))
+    }
+
+    private def aeCraftItem(aeItem: IAEItemStack): IAEItemStack = {
+      val patterns = AEUtil.getGridCrafting(controller.getGridNode(pos).getGrid).getCraftingFor(aeItem, null, 0, controller.getWorld)
+      patterns.find(pattern => pattern.getOutputs.exists(_.isSameType(aeItem))) match {
+        case Some(pattern) => pattern.getOutputs.find(_.isSameType(aeItem)).get
+        case _ => aeItem.copy.setStackSize(0) // Should not be possible, but hey...
+      }
     }
   }
 
