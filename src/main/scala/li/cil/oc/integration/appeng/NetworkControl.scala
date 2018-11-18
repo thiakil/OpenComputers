@@ -107,21 +107,6 @@ trait NetworkControl[AETile >: Null <: TileEntity with IActionHost with IGridHos
   private def allItems: Iterable[IAEItemStack] = AEUtil.getGridStorage(tile.getGridNode(pos).getGrid).getInventory(AEUtil.itemStorageChannel).getStorageList
   private def allCraftables: Iterable[IAEItemStack] = allItems.filter(_.isCraftable)
 
-  private def convert(aeItem: IAEItemStack): java.util.Map[AnyRef, AnyRef] = {
-    // I would prefer to move the convert code to the registry for IAEItemStack
-    // but craftables need the device that crafts them
-    val hash = new java.util.HashMap[AnyRef, AnyRef]()
-    Registry.convert(Array[AnyRef](aePotentialItem(aeItem).createItemStack()))
-      .head
-      .asInstanceOf[java.util.Map[Object, Object]]
-      .collect {
-      case (key, value) => hash += key -> value
-    }
-    hash.update("isCraftable", Boolean.box(aeItem.isCraftable))
-    hash.update("size", Int.box(aeItem.getStackSize.toInt))
-    hash
-  }
-
   @Callback(doc = "function():table -- Get a list of tables representing the available CPUs in the network.")
   def getCpus(context: Context, args: Arguments): Array[AnyRef] = {
     val buffer = new mutable.ListBuffer[Map[String, Any]]
@@ -139,7 +124,7 @@ trait NetworkControl[AETile >: Null <: TileEntity with IActionHost with IGridHos
   def getCraftables(context: Context, args: Arguments): Array[AnyRef] = {
     val filter = getFilter(args, 0)
     result(allCraftables
-      .collect{ case aeCraftItem if matches(convert(aeCraftItem), filter) => new NetworkControl.Craftable(tile, pos, aeCraftItem) }
+      .collect{ case aeCraftItem if matches(ConverterAEStack.convert(aeCraftItem), filter) => new NetworkControl.Craftable(tile, pos, aeCraftItem) }
       .toArray)
   }
 
@@ -147,7 +132,7 @@ trait NetworkControl[AETile >: Null <: TileEntity with IActionHost with IGridHos
   def getItemsInNetwork(context: Context, args: Arguments): Array[AnyRef] = {
     val filter = getFilter(args, 0)
     result(allItems
-      .map(convert)
+      .map(ConverterAEStack.convert)
       .filter(matches(_, filter))
       .toArray)
   }
@@ -159,7 +144,7 @@ trait NetworkControl[AETile >: Null <: TileEntity with IActionHost with IGridHos
       case address: String => DatabaseAccess.database(node, address)
       case _ => DatabaseAccess.databases(node).headOption.getOrElse(throw new IllegalArgumentException("no database upgrade found"))
     }
-    val items = allItems.collect{ case aeItem if matches(convert(aeItem), filter) => aePotentialItem(aeItem)}.toArray
+    val items = allItems.collect{ case aeItem if matches(ConverterAEStack.convert(aeItem), filter) => aePotentialItem(aeItem)}.toArray
     val offset = args.optSlot(database.data, 2, 0)
     val count = args.optInteger(3, Int.MaxValue) min (database.size - offset) min items.length
     var slot = offset
@@ -176,8 +161,7 @@ trait NetworkControl[AETile >: Null <: TileEntity with IActionHost with IGridHos
   @Callback(doc = "function():table -- Get a list of the stored fluids in the network.")
   def getFluidsInNetwork(context: Context, args: Arguments): Array[AnyRef] =
     result(AEUtil.getGridStorage(tile.getGridNode(pos).getGrid).getInventory(AEUtil.fluidStorageChannel).getStorageList.filter(stack =>
-      stack != null).
-        map(_.getFluidStack).toArray)
+      stack != null).toArray)
 
   @Callback(doc = "function():number -- Get the average power injection into the network.")
   def getAvgPowerInjection(context: Context, args: Arguments): Array[AnyRef] =

@@ -6,24 +6,40 @@ import appeng.api.storage.data.{IAEFluidStack, IAEItemStack, IAEStack}
 import li.cil.oc.api.driver.Converter
 import li.cil.oc.server.driver.Registry
 
-class ConverterAEStack extends Converter{
+import scala.collection.convert.WrapAsScala._
+
+object ConverterAEStack extends Converter{
   override def convert(value: Any, output: util.Map[AnyRef, AnyRef]): Unit = {
     value match {
       case aeStack: IAEStack[_] =>
-        output.put("stackSize", aeStack.getStackSize.asInstanceOf[AnyRef])
-        output.put("countRequestable", aeStack.getCountRequestable.asInstanceOf[AnyRef])
-        output.put("craftable", aeStack.isCraftable.asInstanceOf[AnyRef])
-
         aeStack match {
           case item: IAEItemStack =>
-            output.put("type", "item")
-            output.put("definition", Registry.convertRecursively(item.getDefinition, new util.IdentityHashMap()))
+            output.put("aeStackType", "item")
+            convertDefinition(item.getDefinition, output)
           case fluid: IAEFluidStack =>
-            output.put("type", "fluid")
-            output.put("definition", Registry.convertRecursively(fluid.getFluidStack, new util.IdentityHashMap()))
-          case _ => if (!output.containsKey("type")) output.put("type", "unknown")
+            output.put("aeStackType", "fluid")
+            convertDefinition(fluid.getFluidStack, output)
+          case _ => if (!output.containsKey("aeStackType")) output.put("aeStackType", "unknown")
         }
+        output.put("size", Long.box(aeStack.getStackSize))
+        output.put("countRequestable", Long.box(aeStack.getCountRequestable))
+        output.put("isCraftable", Boolean.box(aeStack.isCraftable))
       case _ => //nope
     }
+  }
+
+  def convert(value: Any): util.Map[AnyRef, AnyRef] = {
+    val map = new util.HashMap[AnyRef, AnyRef]()
+    convert(value, map)
+    map
+  }
+
+  private def convertDefinition(definition: AnyRef, output: util.Map[AnyRef,AnyRef]): Unit = {
+    Registry.convert(Array[AnyRef](definition))
+      .head
+      .asInstanceOf[java.util.Map[AnyRef, AnyRef]]
+      .collect {
+        case (key, value) => output += key -> value
+      }
   }
 }
